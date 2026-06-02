@@ -21,11 +21,16 @@ class GastoViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
+        loginAutomatico()
+    }
+
+    fun loginAutomatico(onSucesso: () -> Unit = {}) {
         viewModelScope.launch {
             sessionManager.userId.first()?.let { userId ->
                 val usuario = usuarioDao.buscarPorId(userId)
                 if (usuario != null) {
                     _usuarioLogado.value = usuario
+                    onSucesso()
                 }
             }
         }
@@ -81,16 +86,6 @@ class GastoViewModel(
             val usuarioAtualizado = usuario.copy(nome = nome, emailOuTelefone = contato, senha = senha)
             usuarioDao.inserirUsuario(usuarioAtualizado)
             _usuarioLogado.value = usuarioAtualizado
-        }
-    }
-
-    suspend fun buscarUsuarioPorContato(contato: String): Usuario? {
-        return usuarioDao.buscarPorContato(contato)
-    }
-
-    fun resetarSenha(usuario: Usuario, novaSenha: String) {
-        viewModelScope.launch {
-            usuarioDao.inserirUsuario(usuario.copy(senha = novaSenha))
         }
     }
 

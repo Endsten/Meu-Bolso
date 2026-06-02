@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.Flow
 interface GastoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserirGasto(gasto: Gasto)
+    suspend fun inserirGasto(gasto: Gasto): Long
 
     @Update
-    suspend fun atualizarGasto(gasto: Gasto)
+    suspend fun atualizarGasto(gasto: Gasto): Int
 
     @Delete
     suspend fun deletarGasto(gasto: Gasto)

@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricPrompt
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,11 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -38,7 +37,6 @@ import com.example.gestorgastos.data.AppDatabase
 import com.example.gestorgastos.data.Gasto
 import com.example.gestorgastos.data.SessionManager
 import com.example.gestorgastos.data.Usuario
-import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -87,19 +85,19 @@ fun MainApp(viewModel: GastoViewModel) {
                     NavigationBarItem(
                         selected = telaAtual == "gastos",
                         onClick = { telaAtual = "gastos" },
-                        icon = { Icon(Icons.Default.Add, "Lançar") },
+                        icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Lançar") },
                         label = { Text("Lançar") }
                     )
                     NavigationBarItem(
                         selected = telaAtual == "relatorios",
                         onClick = { telaAtual = "relatorios" },
-                        icon = { Icon(Icons.Default.List, "Relatórios") },
-                        label = { Text("Relatórios") }
+                        icon = { Icon(imageVector = Icons.Default.Dashboard, contentDescription = "Relatórios") },
+                        label = { Text("Dashboard") }
                     )
                     NavigationBarItem(
                         selected = telaAtual == "perfil",
                         onClick = { telaAtual = "perfil" },
-                        icon = { Icon(Icons.Default.Person, "Perfil") },
+                        icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "Perfil") },
                         label = { Text("Perfil") }
                     )
                 }
@@ -123,40 +121,34 @@ fun TelaLogin(viewModel: GastoViewModel) {
     var senha by remember { mutableStateOf("") }
     var lembrar by remember { mutableStateOf(true) }
     var erro by remember { mutableStateOf(false) }
-    var mostrarRecuperacao by remember { mutableStateOf(false) }
     val context = LocalContext.current as FragmentActivity
 
     fun showBiometricPrompt() {
         val executor = ContextCompat.getMainExecutor(context)
         val biometricPrompt = BiometricPrompt(context, executor, object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                Toast.makeText(context, "Bem-vindo de volta!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Acesso confirmado!", Toast.LENGTH_SHORT).show()
             }
         })
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Login Biométrico").setSubtitle("Use sua digital para entrar").setNegativeButtonText("Senha").build()
+            .setTitle("Login Biométrico").setSubtitle("Use sua digital").setNegativeButtonText("Usar Senha").build()
         biometricPrompt.authenticate(promptInfo)
     }
 
-    if (mostrarRecuperacao) {
-        TelaRecuperarSenha(viewModel, onVoltar = { mostrarRecuperacao = false })
-    } else {
-        Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Icon(Icons.Default.Home, null, Modifier.size(80.dp), MaterialTheme.colorScheme.primary)
-            Text("Meu Bolso", style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(32.dp))
-            OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Usuário") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = lembrar, onCheckedChange = { lembrar = it })
-                Text("Permanecer logado", style = MaterialTheme.typography.bodySmall)
-            }
-            if (erro) Text("Dados incorretos!", color = Color.Red)
-            Button(onClick = { viewModel.fazerLogin(nome, senha, lembrar, {}, { erro = true }) }, modifier = Modifier.padding(top = 16.dp).fillMaxWidth().height(50.dp), shape = RoundedCornerShape(12.dp)) { Text("Entrar") }
-            IconButton(onClick = { showBiometricPrompt() }, modifier = Modifier.padding(top = 16.dp)) { Icon(Icons.Default.Lock, "Digital", modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary) }
-            TextButton(onClick = { mostrarRecuperacao = true }) { Text("Esqueci minha senha") }
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(imageVector = Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
+        Text("Meu Bolso", style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(32.dp))
+        OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Usuário") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = lembrar, onCheckedChange = { lembrar = it })
+            Text("Permanecer logado", style = MaterialTheme.typography.bodySmall)
         }
+        if (erro) Text("Dados incorretos!", color = Color.Red)
+        Button(onClick = { viewModel.fazerLogin(nome, senha, lembrar, {}, { erro = true }) }, modifier = Modifier.padding(top = 16.dp).fillMaxWidth().height(50.dp), shape = RoundedCornerShape(12.dp)) { Text("Entrar") }
+        IconButton(onClick = { showBiometricPrompt() }, modifier = Modifier.padding(top = 16.dp)) { Icon(imageVector = Icons.Default.Fingerprint, "Digital", modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary) }
     }
 }
 
@@ -185,26 +177,26 @@ fun TelaGastos(viewModel: GastoViewModel) {
         Text("Olá, ${usuario?.nome}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         if (usuario?.limiteSemanal != null && usuario!!.limiteSemanal > 0) {
             val progresso = (totalSemanal / usuario!!.limiteSemanal).coerceIn(0.0, 1.0)
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = if (progresso >= 1.0) Color(0xFFFFEBEE) else Color.White)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = if (progresso >= 0.9) Color(0xFFFFEBEE) else Color.White)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Gasto Semanal", style = MaterialTheme.typography.labelMedium)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("R$ ${String.format("%.2f", totalSemanal)}", fontWeight = FontWeight.Bold, fontSize = 20.sp); Text("Meta: R$ ${String.format("%.2f", usuario!!.limiteSemanal)}", color = Color.Gray) }
+                    Text("Uso do Salário", style = MaterialTheme.typography.labelMedium)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("R$ ${String.format("%.2f", totalSemanal)}", fontWeight = FontWeight.Bold, fontSize = 20.sp); Text("Salário: R$ ${String.format("%.2f", usuario!!.limiteSemanal)}", color = Color.Gray) }
                     Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(progress = { progresso.toFloat() }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape), color = if (progresso >= 1.0) Color.Red else MaterialTheme.colorScheme.primary)
+                    LinearProgressIndicator(progress = { progresso.toFloat() }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape), color = if (progresso >= 0.9) Color.Red else MaterialTheme.colorScheme.primary)
                 }
             }
         }
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation(2.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                OutlinedTextField(value = descricao, onValueChange = { descricao = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                OutlinedTextField(value = descricao, onValueChange = { descricao = it }, label = { Text("O que você comprou?") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(value = valor, onValueChange = { valor = it }, label = { Text("Valor R$") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp))
                     Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(value = categoria, onValueChange = {}, readOnly = true, label = { Text("Categoria") }, modifier = Modifier.fillMaxWidth().clickable { expandedCat = true }, shape = RoundedCornerShape(12.dp), trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }, enabled = false)
+                        OutlinedTextField(value = categoria, onValueChange = {}, readOnly = true, label = { Text("Categoria") }, modifier = Modifier.fillMaxWidth().clickable { expandedCat = true }, shape = RoundedCornerShape(12.dp), trailingIcon = { Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null) }, enabled = false)
                         DropdownMenu(expanded = expandedCat, onDismissRequest = { expandedCat = false }) { categorias.forEach { cat -> DropdownMenuItem(text = { Text(cat) }, onClick = { categoria = cat; expandedCat = false }) } }
                     }
                 }
-                OutlinedTextField(value = sdf.format(Date(dataSelecionada)), onValueChange = {}, readOnly = true, label = { Text("Data") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).clickable { showDatePicker = true }, shape = RoundedCornerShape(12.dp), trailingIcon = { Icon(Icons.Default.DateRange, null) }, enabled = false)
+                OutlinedTextField(value = sdf.format(Date(dataSelecionada)), onValueChange = {}, readOnly = true, label = { Text("Data") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).clickable { showDatePicker = true }, shape = RoundedCornerShape(12.dp), trailingIcon = { Icon(imageVector = Icons.Default.DateRange, contentDescription = null) }, enabled = false)
                 Button(onClick = {
                     val v = valor.replace(",", ".").toDoubleOrNull()
                     if (descricao.isNotEmpty() && v != null) {
@@ -222,7 +214,7 @@ fun TelaGastos(viewModel: GastoViewModel) {
                 ListItem(
                     headlineContent = { Text(gasto.descricao, fontWeight = FontWeight.SemiBold) },
                     supportingContent = { Text("${gasto.categoria} • ${sdf.format(Date(gasto.data))}") },
-                    trailingContent = { Row(verticalAlignment = Alignment.CenterVertically) { Text("R$ ${String.format("%.2f", gasto.valor)}", color = Color.Red, fontWeight = FontWeight.Bold); IconButton(onClick = { viewModel.deletarGasto(gasto) }) { Icon(Icons.Default.Delete, null, tint = Color.LightGray) } } },
+                    trailingContent = { Row(verticalAlignment = Alignment.CenterVertically) { Text("R$ ${String.format("%.2f", gasto.valor)}", color = Color.Red, fontWeight = FontWeight.Bold); IconButton(onClick = { viewModel.deletarGasto(gasto) }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.LightGray) } } },
                     modifier = Modifier.clickable { gastoSendoEditado = gasto; descricao = gasto.descricao; valor = gasto.valor.toString(); categoria = gasto.categoria; dataSelecionada = gasto.data }
                 )
                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
@@ -235,7 +227,9 @@ fun TelaGastos(viewModel: GastoViewModel) {
 @Composable
 fun TelaRelatorios(viewModel: GastoViewModel) {
     val lista by viewModel.listaGastos.collectAsStateWithLifecycle()
-    var filtro by remember { mutableStateOf("Semana") }
+    val usuario by viewModel.usuarioLogado.collectAsStateWithLifecycle()
+    var filtro by remember { mutableStateOf("Mês") }
+    var categoriaSelecionada by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
@@ -244,99 +238,105 @@ fun TelaRelatorios(viewModel: GastoViewModel) {
         "Mês" -> { val cal = Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }; lista.filter { it.data >= cal.timeInMillis } }
         else -> lista
     }
-    val total = listaFiltrada.sumOf { it.valor }
+    
+    val totalGastos = listaFiltrada.sumOf { it.valor }
+    val salario = usuario?.limiteSemanal ?: 0.0
+    val saldo = (salario - totalGastos).coerceAtLeast(0.0)
     val porCat = listaFiltrada.groupBy { it.categoria }.mapValues { it.value.sumOf { g -> g.valor } }
+    val cores = listOf(Color(0xFF1976D2), Color(0xFF388E3C), Color(0xFFFBC02D), Color(0xFFD32F2F), Color(0xFF7B1FA2), Color(0xFF0097A7), Color(0xFFE64A19), Color(0xFF5D4037))
 
     fun exportarParaExcel() {
-        val cabecalho = "Data,Descricao,Categoria,Valor\n"
-        val corpo = listaFiltrada.joinToString("\n") { gasto ->
-            "${sdf.format(Date(gasto.data))},${gasto.descricao},${gasto.categoria},${String.format("%.2f", gasto.valor)}"
-        }
-        val csv = cabecalho + corpo
+        val csv = "Data,Descricao,Categoria,Valor\n" + listaFiltrada.joinToString("\n") { "${sdf.format(Date(it.data))},${it.descricao},${it.categoria},${String.format("%.2f", it.valor)}" }
         try {
-            val fileName = "relatorio_meu_bolso_${System.currentTimeMillis()}.csv"
-            val file = File(context.cacheDir, fileName)
-            file.writeText(csv)
-            val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/csv"
-                putExtra(Intent.EXTRA_SUBJECT, "Relatório - Meu Bolso")
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(intent, "Exportar Relatório"))
-        } catch (e: Exception) {
-            Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+            val file = File(context.cacheDir, "relatorio_${System.currentTimeMillis()}.csv").apply { writeText(csv) }
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/csv"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }, "Exportar"))
+        } catch (e: Exception) { Toast.makeText(context, "Erro ao exportar!", Toast.LENGTH_SHORT).show() }
     }
 
     Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Relatórios", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            IconButton(onClick = { exportarParaExcel() }) { Icon(Icons.Default.Share, "Exportar", tint = MaterialTheme.colorScheme.primary) }
+            Text("Dashboard", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            IconButton(onClick = { exportarParaExcel() }) { Icon(imageVector = Icons.Default.Share, contentDescription = "Exportar", tint = MaterialTheme.colorScheme.primary) }
         }
+        
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Semana", "Mês", "Tudo").forEach { f -> FilterChip(selected = filtro == f, onClick = { filtro = f }, label = { Text(f) }) }
+            listOf("Semana", "Mês", "Tudo").forEach { f -> FilterChip(selected = filtro == f, onClick = { filtro = f; categoriaSelecionada = null }, label = { Text(f) }) }
         }
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Total no Período", color = Color.White.copy(alpha = 0.8f))
-                Text("R$ ${String.format("%.2f", total)}", style = MaterialTheme.typography.displaySmall, color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        }
-        if (total > 0) {
-            Text(if (filtro == "Semana") "Divisão por Categorias" else "Evolução Diária", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
-                if (filtro == "Semana") GraficoPizza(porCat, total) else GraficoBarras(listaFiltrada)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(porCat.toList().sortedByDescending { it.second }) { (cat, valor) ->
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(cat, fontWeight = FontWeight.Medium)
-                            Text("R$ ${String.format("%.2f", valor)}", fontWeight = FontWeight.Bold)
-                        }
-                        LinearProgressIndicator(progress = { (valor / total).toFloat() }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape))
+
+        if (categoriaSelecionada == null) {
+            // DASHBOARD CARDS
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Icon(Icons.Default.TrendingUp, contentDescription = null, tint = Color(0xFF2E7D32))
+                        Text("Saldo", style = MaterialTheme.typography.labelMedium, color = Color(0xFF2E7D32))
+                        Text("R$ ${String.format("%.2f", saldo)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                    }
+                }
+                Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Icon(Icons.Default.TrendingDown, contentDescription = null, tint = Color(0xFFC62828))
+                        Text("Gastos", style = MaterialTheme.typography.labelMedium, color = Color(0xFFC62828))
+                        Text("R$ ${String.format("%.2f", totalGastos)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-fun GraficoPizza(dados: Map<String, Double>, total: Double) {
-    val cores = listOf(Color(0xFF1976D2), Color(0xFF388E3C), Color(0xFFFBC02D), Color(0xFFD32F2F), Color(0xFF7B1FA2), Color(0xFF0097A7), Color(0xFFE64A19), Color(0xFF5D4037))
-    Canvas(modifier = Modifier.size(140.dp)) {
-        var startAngle = 0f
-        dados.values.forEachIndexed { index, valor ->
-            val sweepAngle = (valor / total * 360).toFloat()
-            drawArc(color = cores[index % cores.size], startAngle = startAngle, sweepAngle = sweepAngle, useCenter = true)
-            startAngle += sweepAngle
-        }
-    }
-}
+            Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Renda Configurada", style = MaterialTheme.typography.labelMedium)
+                        Text("R$ ${String.format("%.2f", salario)}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    }
+                    Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
 
-@Composable
-fun GraficoBarras(lista: List<Gasto>) {
-    val gastosPorDia = mutableMapOf<Int, Double>()
-    for (i in 0..6) {
-        val c = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -i) }
-        gastosPorDia[c.get(Calendar.DAY_OF_YEAR)] = 0.0
-    }
-    lista.forEach { g ->
-        val c = Calendar.getInstance().apply { timeInMillis = g.data }
-        val d = c.get(Calendar.DAY_OF_YEAR)
-        if (gastosPorDia.containsKey(d)) gastosPorDia[d] = gastosPorDia[d]!! + g.valor
-    }
-    val maxGasto = (gastosPorDia.values.maxOrNull() ?: 1.0).coerceAtLeast(1.0)
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
-        gastosPorDia.keys.sorted().forEach { dia ->
-            val altura = (gastosPorDia[dia]!! / maxGasto * 120).dp
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(modifier = Modifier.width(18.dp).height(altura).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)))
-                Text(SimpleDateFormat("dd", Locale.getDefault()).format(Calendar.getInstance().apply { set(Calendar.DAY_OF_YEAR, dia) }.time), fontSize = 9.sp)
+            if (totalGastos > 0) {
+                Text("Gastos por Categoria", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(porCat.toList().sortedByDescending { it.second }) { (cat, valor) ->
+                        val percent = (valor / totalGastos).toFloat()
+                        val cor = cores[porCat.keys.toList().indexOf(cat) % cores.size]
+                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { categoriaSelecionada = cat }) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(cat, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("R$ ${String.format("%.2f", valor)} (${String.format("%.0f", percent * 100)}%)", fontWeight = FontWeight.Bold, color = cor)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            LinearProgressIndicator(progress = { percent }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape), color = cor, trackColor = Color(0xFFEEEEEE))
+                        }
+                    }
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize().weight(1f), contentAlignment = Alignment.Center) { Text("Nenhum gasto registrado", color = Color.Gray) }
+            }
+        } else {
+            // TABELA DETALHADA
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { categoriaSelecionada = null }.padding(bottom = 16.dp)) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.primary)
+                    Text(" Voltar", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+                Text("Detalhes: $categoriaSelecionada", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primaryContainer).padding(8.dp)) {
+                    Text("Data", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("Descrição", modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("Valor", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+                }
+                val gastosCategoria = listaFiltrada.filter { it.categoria == categoriaSelecionada }.sortedByDescending { it.data }
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(gastosCategoria) { gasto ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                            Text(sdf.format(Date(gasto.data)), modifier = Modifier.weight(1f), fontSize = 12.sp)
+                            Text(gasto.descricao, modifier = Modifier.weight(2f), fontSize = 12.sp)
+                            Text("R$ ${String.format("%.2f", gasto.valor)}", modifier = Modifier.weight(1f), fontSize = 12.sp, textAlign = TextAlign.End, fontWeight = FontWeight.Bold, color = Color.Red)
+                        }
+                        HorizontalDivider(thickness = 0.5.dp)
+                    }
+                }
             }
         }
     }
@@ -351,19 +351,19 @@ fun TelaPerfil(viewModel: GastoViewModel) {
     var senha by remember { mutableStateOf(usuario?.senha ?: "") }
     var limite by remember { mutableStateOf(usuario?.limiteSemanal?.toString() ?: "0.0") }
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-        Text("Perfil e Configurações", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Configurações do Perfil", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(24.dp))
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 OutlinedTextField(value = contato, onValueChange = { contato = it }, label = { Text("Contato") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
                 OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = limite, onValueChange = { limite = it }, label = { Text("Meta R$") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
+                OutlinedTextField(value = limite, onValueChange = { limite = it }, label = { Text("Salário Mensal R$") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
                 Button(onClick = { viewModel.atualizarUsuario(nome, contato, senha); viewModel.atualizarLimiteSemanal(limite.replace(",", ".").toDoubleOrNull() ?: 0.0); Toast.makeText(context, "Salvo!", Toast.LENGTH_SHORT).show() }, modifier = Modifier.padding(top = 24.dp).fillMaxWidth().height(50.dp), shape = RoundedCornerShape(12.dp)) { Text("Salvar Alterações") }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-        Button(onClick = { viewModel.logout() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE), contentColor = Color.Red), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Default.ExitToApp, null); Spacer(modifier = Modifier.width(8.dp)); Text("Sair") }
+        Button(onClick = { viewModel.logout() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE), contentColor = Color.Red), shape = RoundedCornerShape(12.dp)) { Icon(imageVector = Icons.Default.Logout, contentDescription = "Sair") ; Spacer(modifier = Modifier.width(8.dp)) ; Text("Sair") }
     }
 }
 
@@ -373,46 +373,12 @@ fun TelaCadastroInicial(viewModel: GastoViewModel) {
     var contato by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.Home, null, Modifier.size(60.dp), MaterialTheme.colorScheme.primary)
+        Icon(imageVector = Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(60.dp), tint = MaterialTheme.colorScheme.primary)
         Text("Bem-vindo!", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(32.dp))
         OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
         OutlinedTextField(value = contato, onValueChange = { contato = it }, label = { Text("Contato") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
         OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp))
         Button(onClick = { if (nome.isNotEmpty() && contato.isNotEmpty() && senha.isNotEmpty()) viewModel.cadastrarUsuario(nome, contato, senha, {}) }, modifier = Modifier.padding(top = 32.dp).fillMaxWidth().height(50.dp), shape = RoundedCornerShape(12.dp)) { Text("Criar Conta") }
-    }
-}
-
-@Composable
-fun TelaRecuperarSenha(viewModel: GastoViewModel, onVoltar: () -> Unit) {
-    var etapa by remember { mutableStateOf(1) }
-    var contatoBusca by remember { mutableStateOf("") }
-    var usuarioEncontrado by remember { mutableStateOf<Usuario?>(null) }
-    var codigoGerado by remember { mutableStateOf("") }
-    var codigoDigitado by remember { mutableStateOf("") }
-    var novaSenha by remember { mutableStateOf("") }
-    var erroMsg by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
-        Text("Recuperar", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        when (etapa) {
-            1 -> {
-                OutlinedTextField(value = contatoBusca, onValueChange = { contatoBusca = it }, label = { Text("Contato") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                Button(onClick = { scope.launch { val user = viewModel.buscarUsuarioPorContato(contatoBusca)
-                    if (user != null) { usuarioEncontrado = user; codigoGerado = (1000..9999).random().toString()
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$contatoBusca")).apply { putExtra(Intent.EXTRA_SUBJECT, "Recuperação"); putExtra(Intent.EXTRA_TEXT, "Código: $codigoGerado") }
-                        try { context.startActivity(intent); etapa = 2 } catch (e: Exception) { erroMsg = "Código: $codigoGerado"; etapa = 2 } } else erroMsg = "Não encontrado" } }, modifier = Modifier.padding(top = 8.dp).fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("Próximo") }
-            }
-            2 -> {
-                OutlinedTextField(value = codigoDigitado, onValueChange = { codigoDigitado = it }, label = { Text("Código") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                Button(onClick = { if (codigoDigitado == codigoGerado) etapa = 3 else erroMsg = "Incorreto" }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp)) { Text("Verificar") }
-            }
-            3 -> {
-                OutlinedTextField(value = novaSenha, onValueChange = { novaSenha = it }, label = { Text("Nova Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                Button(onClick = { if (novaSenha.length >= 3) { viewModel.resetarSenha(usuarioEncontrado!!, novaSenha); onVoltar() } }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), shape = RoundedCornerShape(12.dp)) { Text("Redefinir") }
-            }
-        }
-        TextButton(onClick = onVoltar) { Text("Cancelar") }
     }
 }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UsuarioDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserirUsuario(usuario: Usuario)
+    suspend fun inserirUsuario(usuario: Usuario): Long
 
     @Query("SELECT * FROM tabela_usuarios WHERE nome = :nome AND senha = :senha LIMIT 1")
     suspend fun login(nome: String, senha: String): Usuario?
